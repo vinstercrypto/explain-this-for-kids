@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ summary.title }} - Explain This for Kids</title>
+    <title>{{ summary.title }} - Summarize It!</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <meta property="og:title" content="{{ summary.title }}">
     <meta property="og:description" content="{{ summary.explanation[:200] }}">
@@ -11,8 +11,8 @@
 <body>
     <div class="container">
         <header>
-            <h1>📚 Explain This for Kids</h1>
-            <p class="subtitle">Shared Explanation</p>
+            <h1>Summarize It!</h1>
+            <p class="tagline">Shared Summary</p>
         </header>
 
         <div class="result">
@@ -50,7 +50,7 @@
 
             <div class="share-footer">
                 <p>Created on {{ summary.created_at[:10] }}</p>
-                <a href="/" class="btn-secondary">Create Your Own Explanation</a>
+                <a href="/" class="btn-secondary">Create Your Own Summary</a>
             </div>
         </div>
     </div>

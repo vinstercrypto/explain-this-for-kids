@@ -29,12 +29,14 @@ header {
 h1 {
     color: #333;
     font-size: 2.5em;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
 }
 
-.subtitle {
+.tagline {
     color: #666;
-    font-size: 1.1em;
+    font-size: 1em;
+    line-height: 1.5;
+    max-width: 100%;
 }
 
 .input-section {
@@ -378,8 +380,8 @@ select:focus {
         font-size: 2em;
     }
 
-    .subtitle {
-        font-size: 1em;
+    .tagline {
+        font-size: 0.95em;
     }
 
     .result {
@@ -428,8 +430,8 @@ select:focus {
         font-size: 1.5em;
     }
 
-    .subtitle {
-        font-size: 0.9em;
+    .tagline {
+        font-size: 0.85em;
     }
 
     .btn-primary {
