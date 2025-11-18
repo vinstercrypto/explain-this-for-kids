@@ -35,6 +35,7 @@
                 </ul>
             </div>
 
+            {% if summary.vocabulary and summary.vocabulary|length > 0 %}
             <div class="vocabulary-section">
                 <h3>Vocabulary Builder:</h3>
                 <div class="vocabulary-list">
@@ -45,6 +46,7 @@
                     {% endfor %}
                 </div>
             </div>
+            {% endif %}
 
             <div class="share-footer">
                 <p>Created on {{ summary.created_at[:10] }}</p>

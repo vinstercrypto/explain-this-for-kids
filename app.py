@@ -4,14 +4,14 @@ import json
 import secrets
 import sqlite3
 import smtplib
-from datetime import datetime
+from datetime import datetime, timezone
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import requests
 from flask import Flask, render_template, request, jsonify, session, send_file, url_for
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-from fpdf import FPDF
+from fpdf import FPDF, XPos, YPos
 import anthropic
 from io import BytesIO
 
@@ -110,24 +110,24 @@ IMPORTANT - SAFE SUMMARY MODE FOR YOUNG LEARNERS:
     else:
         safe_instructions = ""
 
-    # Adult TLDR format
+    # Adult TLDR format - TRULY CONCISE, NO VOCABULARY
     if category == 'D':
         format_instructions = f"""
-Please format your response EXACTLY as follows:
+Please format your response EXACTLY as follows - KEEP IT VERY BRIEF (this is "Too Long Didn't Read"):
 
 1) First line: A concise, clear title (no label, just the title)
 2) Blank line
-3) TLDR: Write "TLDR:" followed by 1-2 sentences summarizing the key point for busy adults
+3) TLDR: Write "TLDR:" followed by 1-2 sentences max summarizing the key point
 4) Blank line
-5) Then write a more detailed paragraph explanation (2-4 sentences)
-6) Blank line
-7) "Why this matters:" on its own line
-8) Exactly {bullet_count} bullet points (use •) focusing on key takeaways, implications, or action items
-9) Blank line
-10) "Vocabulary:" on its own line
-11) 3-6 key terms with concise definitions, formatted as "• WORD: definition"
+5) "Why this matters:" on its own line
+6) Exactly {bullet_count} SHORT bullet points (use •) - each bullet should be ONE LINE MAX, focusing on key takeaways
+
+DO NOT include vocabulary words or definitions.
+DO NOT write long explanatory paragraphs beyond the TLDR.
+Keep the entire response concise and scannable for busy adults.
 """
     else:
+        # K-12 format with vocabulary
         format_instructions = f"""
 Please format your response EXACTLY as follows:
 
@@ -204,24 +204,32 @@ def parse_claude_response(response_text, category):
                 vocabulary_items.append({"word": word, "definition": definition})
 
     # Build explanation
-    if category == 'D' and tldr:
-        explanation = f"TLDR: {tldr}\n\n" + ' '.join(explanation_lines)
+    if category == 'D':
+        # Adult TLDR - keep it truly concise, just the TLDR
+        if tldr:
+            explanation = f"TLDR: {tldr}"
+        else:
+            explanation = ' '.join(explanation_lines) if explanation_lines else response_text
     else:
         explanation = ' '.join(explanation_lines)
 
-    # Ensure minimum vocabulary items
-    if len(vocabulary_items) < 3:
-        vocabulary_items = [
-            {"word": "Context", "definition": "The circumstances or setting surrounding something"},
-            {"word": "Summary", "definition": "A brief statement of the main points"},
-            {"word": "Explanation", "definition": "A description that makes something clear"}
-        ]
+    # Vocabulary - Adult TLDR gets NO vocabulary
+    if category == 'D':
+        vocabulary_items = []
+    else:
+        # Ensure minimum vocabulary items for K-12
+        if len(vocabulary_items) < 3:
+            vocabulary_items = [
+                {"word": "Context", "definition": "The circumstances or setting surrounding something"},
+                {"word": "Summary", "definition": "A brief statement of the main points"},
+                {"word": "Explanation", "definition": "A description that makes something clear"}
+            ]
 
     return {
         "title": title or "Explanation",
         "explanation": explanation or response_text,
         "why_it_matters": why_matters_bullets,
-        "vocabulary": vocabulary_items[:6]
+        "vocabulary": vocabulary_items[:6] if category != 'D' else []
     }
 
 
@@ -307,7 +315,7 @@ def call_claude_api(content, grade_level):
 def save_summary_to_db(grade_level, category, title, explanation, bullets, vocabulary):
     """Save summary to database and return short ID."""
     summary_id = secrets.token_urlsafe(8)
-    created_at = datetime.utcnow().isoformat()
+    created_at = datetime.now(timezone.utc).isoformat()
 
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
@@ -418,7 +426,7 @@ def explain():
             'explanation': result['explanation'],
             'why_it_matters': result['why_it_matters'],
             'vocabulary': result['vocabulary'],
-            'timestamp': datetime.utcnow().isoformat(),
+            'timestamp': datetime.now(timezone.utc).isoformat(),
             'summary_id': result['summary_id']
         }
 
@@ -497,62 +505,79 @@ def view_summary(summary_id):
 @app.route('/download-pdf')
 def download_pdf():
     """Generate and download PDF of last result."""
-    if 'last_result' not in session:
-        return "No result to download", 400
+    try:
+        if 'last_result' not in session:
+            return "No result to download. Please generate an explanation first.", 400
 
-    result = session['last_result']
+        result = session['last_result']
 
-    # Create PDF
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_auto_page_break(auto=True, margin=15)
+        # Create PDF
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_auto_page_break(auto=True, margin=15)
 
-    # Title
-    pdf.set_font('Arial', 'B', 16)
-    pdf.multi_cell(0, 10, result['title'])
-    pdf.ln(5)
+        # Title
+        pdf.set_font('Helvetica', 'B', 16)
+        pdf.multi_cell(0, 10, txt=result['title'])
+        pdf.ln(5)
 
-    # Grade level
-    pdf.set_font('Arial', 'I', 10)
-    pdf.cell(0, 10, f"Grade Level: {result['grade_level']}", ln=True)
-    pdf.ln(5)
+        # Grade level
+        pdf.set_font('Helvetica', 'I', 10)
+        pdf.cell(0, 10, txt=f"Grade Level: {result['grade_level']}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.ln(5)
 
-    # Explanation
-    pdf.set_font('Arial', '', 11)
-    pdf.multi_cell(0, 6, result['explanation'])
-    pdf.ln(5)
+        # Explanation
+        pdf.set_font('Helvetica', '', 11)
+        # Clean up any problematic characters
+        explanation_text = result['explanation'].replace('\n\n', '\n').strip()
+        pdf.multi_cell(0, 6, txt=explanation_text)
+        pdf.ln(5)
 
-    # Why this matters
-    pdf.set_font('Arial', 'B', 12)
-    pdf.cell(0, 10, 'Why this matters:', ln=True)
-    pdf.set_font('Arial', '', 11)
-    for bullet in result['why_it_matters']:
-        pdf.multi_cell(0, 6, f"  - {bullet}")
-    pdf.ln(5)
+        # Why this matters
+        pdf.set_font('Helvetica', 'B', 12)
+        pdf.cell(0, 10, txt='Why this matters:', new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.set_font('Helvetica', '', 11)
 
-    # Vocabulary
-    pdf.set_font('Arial', 'B', 12)
-    pdf.cell(0, 10, 'Vocabulary:', ln=True)
-    pdf.set_font('Arial', '', 11)
-    for item in result['vocabulary']:
-        pdf.multi_cell(0, 6, f"  - {item['word']}: {item['definition']}")
-    pdf.ln(5)
+        for bullet in result['why_it_matters']:
+            # Use bullet character instead of "  - " prefix to avoid spacing issues
+            bullet_text = bullet.strip()
+            # Write bullet with proper indentation
+            pdf.set_x(15)  # Indent
+            pdf.multi_cell(0, 6, txt=f"• {bullet_text}")
+        pdf.ln(5)
 
-    # Timestamp
-    pdf.set_font('Arial', 'I', 8)
-    pdf.cell(0, 10, f"Generated: {result['timestamp']}", ln=True)
+        # Vocabulary (only if present - Adult TLDR has no vocab)
+        if result.get('vocabulary') and len(result['vocabulary']) > 0:
+            pdf.set_font('Helvetica', 'B', 12)
+            pdf.cell(0, 10, txt='Vocabulary:', new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            pdf.set_font('Helvetica', '', 11)
 
-    # Output to bytes
-    pdf_output = pdf.output(dest='S').encode('latin1')
-    buffer = BytesIO(pdf_output)
-    buffer.seek(0)
+            for item in result['vocabulary']:
+                vocab_text = f"{item['word']}: {item['definition']}"
+                pdf.set_x(15)  # Indent
+                pdf.multi_cell(0, 6, txt=f"• {vocab_text}")
+            pdf.ln(5)
 
-    return send_file(
-        buffer,
-        mimetype='application/pdf',
-        as_attachment=True,
-        download_name='explanation.pdf'
-    )
+        # Timestamp
+        pdf.set_font('Helvetica', 'I', 8)
+        timestamp_display = result.get('timestamp', '').split('T')[0]  # Just the date
+        pdf.cell(0, 10, txt=f"Generated: {timestamp_display}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+        # Output to bytes
+        pdf_output = pdf.output()
+        buffer = BytesIO(pdf_output)
+        buffer.seek(0)
+
+        return send_file(
+            buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name='explanation.pdf'
+        )
+
+    except Exception as e:
+        print(f"Error generating PDF: {e}")
+        return f"Error generating PDF: {str(e)}. Please try again.", 500
 
 
 @app.route('/email-summary', methods=['POST'])
@@ -566,7 +591,8 @@ def email_summary():
 
     email = request.form.get('email', '').strip()
 
-    if not email or '@' not in email:
+    # Basic email validation
+    if not email or '@' not in email or '.' not in email.split('@')[1] if '@' in email else True:
         return jsonify({
             'success': False,
             'message': 'Please enter a valid email address'
@@ -595,11 +621,13 @@ WHY THIS MATTERS:
     for bullet in result['why_it_matters']:
         email_body += f"  - {bullet}\n"
 
-    email_body += "\nVOCABULARY:\n"
-    for item in result['vocabulary']:
-        email_body += f"  - {item['word']}: {item['definition']}\n"
+    # Only include vocabulary if present (not Adult TLDR)
+    if result.get('vocabulary') and len(result['vocabulary']) > 0:
+        email_body += "\nVOCABULARY:\n"
+        for item in result['vocabulary']:
+            email_body += f"  - {item['word']}: {item['definition']}\n"
 
-    email_body += f"\n---\nGenerated by Explain This for Kids\n{result['timestamp']}"
+    email_body += f"\n---\nGenerated by Explain This for Kids\n{result.get('timestamp', '')}"
 
     try:
         # Create message

@@ -16,9 +16,9 @@ A powerful web app that takes complex text or article URLs and explains them at 
   - K-5: 2 bullets
   - 6-8: 3 bullets
   - 9-12: 5 bullets
-  - Adult TLDR: 5 bullets + TLDR summary
+  - Adult TLDR: 1-2 sentence TLDR + 5 short bullets (NO vocabulary)
 - **Safe Summary Mode**: For K-5, content is filtered to avoid graphic violence, explicit content, and inappropriate topics
-- **Vocabulary Builder**: 3-6 key terms with grade-appropriate definitions
+- **Vocabulary Builder**: 3-6 key terms with grade-appropriate definitions (K-12 only, not for Adult TLDR)
 - **Shareable Links**: Each explanation gets a unique shareable URL
 - **PDF Download**: Download explanations as printable PDFs
 - **Email Summary**: Send explanations to any email address
@@ -240,7 +240,7 @@ The app categorizes grade levels into four groups:
 - **Category A (K-5)**: 2 bullets, safe summary mode, simple vocabulary
 - **Category B (6-8)**: 3 bullets, age-appropriate content
 - **Category C (9-12)**: 5 bullets, more advanced vocabulary
-- **Category D (Adult TLDR)**: TLDR + detailed explanation + 5 bullets
+- **Category D (Adult TLDR)**: 1-2 sentence TLDR + 5 short bullets, NO vocabulary (truly concise for busy adults)
 
 ### Safe Summary Mode (K-5)
 
