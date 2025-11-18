@@ -539,11 +539,11 @@ def download_pdf():
         pdf.set_font('Helvetica', '', 11)
 
         for bullet in result['why_it_matters']:
-            # Use bullet character instead of "  - " prefix to avoid spacing issues
+            # Use dash instead of bullet character for compatibility
             bullet_text = bullet.strip()
             # Write bullet with proper indentation
             pdf.set_x(15)  # Indent
-            pdf.multi_cell(0, 6, txt=f"• {bullet_text}")
+            pdf.multi_cell(0, 6, txt=f"- {bullet_text}")
         pdf.ln(5)
 
         # Vocabulary (only if present - Adult TLDR has no vocab)
@@ -555,7 +555,7 @@ def download_pdf():
             for item in result['vocabulary']:
                 vocab_text = f"{item['word']}: {item['definition']}"
                 pdf.set_x(15)  # Indent
-                pdf.multi_cell(0, 6, txt=f"• {vocab_text}")
+                pdf.multi_cell(0, 6, txt=f"- {vocab_text}")
             pdf.ln(5)
 
         # Timestamp

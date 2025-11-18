@@ -151,7 +151,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Handle download PDF button
     document.getElementById('download-pdf-btn').addEventListener('click', function() {
-        window.location.href = '/download-pdf';
+        // Open PDF in new tab so we don't lose the current summary
+        window.open('/download-pdf', '_blank');
     });
 
     // Handle email form
