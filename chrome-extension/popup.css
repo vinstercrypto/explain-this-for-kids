@@ -1,0 +1,348 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    width: 400px;
+    max-height: 600px;
+    background: white;
+    line-height: 1.6;
+    overflow-y: auto;
+}
+
+.container {
+    padding: 16px;
+}
+
+/* Header */
+header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #667eea;
+}
+
+h1 {
+    color: #333;
+    font-size: 1.5em;
+    margin-bottom: 8px;
+}
+
+.tagline {
+    color: #666;
+    font-size: 0.85em;
+    line-height: 1.4;
+}
+
+/* Input Section */
+.input-section {
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 12px;
+}
+
+label {
+    display: block;
+    color: #333;
+    font-weight: 600;
+    margin-bottom: 6px;
+    font-size: 0.9em;
+}
+
+select {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.9em;
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.3s;
+}
+
+select:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-secondary {
+    background: #f0f0f0;
+    color: #333;
+    padding: 8px 16px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 0.85em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+    background: #e0e0e0;
+    border-color: #667eea;
+}
+
+/* Loading State */
+.loading {
+    text-align: center;
+    padding: 30px 10px;
+    color: #667eea;
+}
+
+.spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #667eea;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 12px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading p {
+    font-size: 0.9em;
+}
+
+/* Error Message */
+.error-message {
+    background: #fee;
+    color: #c33;
+    padding: 12px;
+    border-radius: 6px;
+    border-left: 3px solid #c33;
+    margin-bottom: 15px;
+    font-size: 0.9em;
+}
+
+/* Results Section */
+.result {
+    margin-top: 15px;
+}
+
+.result h2 {
+    color: #333;
+    font-size: 1.2em;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #667eea;
+}
+
+.explanation {
+    margin-bottom: 15px;
+}
+
+.explanation p {
+    color: #444;
+    font-size: 0.9em;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+/* Bullets Section */
+.bullets-section {
+    margin-bottom: 15px;
+}
+
+.bullets-section h3 {
+    color: #667eea;
+    font-size: 1em;
+    margin-bottom: 10px;
+}
+
+.bullets-section ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.bullets-section li {
+    color: #555;
+    font-size: 0.85em;
+    padding: 6px 0 6px 20px;
+    position: relative;
+    line-height: 1.5;
+}
+
+.bullets-section li:before {
+    content: "•";
+    color: #667eea;
+    font-size: 1.2em;
+    position: absolute;
+    left: 0;
+    top: 4px;
+}
+
+/* Vocabulary Section */
+.vocabulary-section {
+    margin-bottom: 15px;
+}
+
+.vocabulary-section h3 {
+    color: #667eea;
+    font-size: 1em;
+    margin-bottom: 10px;
+}
+
+.vocabulary-list {
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 10px;
+}
+
+.vocab-item {
+    padding: 6px 0;
+    border-bottom: 1px solid #e0e0e0;
+    color: #555;
+    line-height: 1.5;
+    font-size: 0.85em;
+}
+
+.vocab-item:last-child {
+    border-bottom: none;
+}
+
+.vocab-item strong {
+    color: #667eea;
+    font-weight: 600;
+}
+
+/* MLA Citation Section */
+.mla-citation-section {
+    margin-bottom: 15px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border-left: 3px solid #667eea;
+}
+
+.mla-citation-section h4 {
+    color: #667eea;
+    font-size: 0.85em;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.mla-citation-section p {
+    color: #555;
+    font-size: 0.8em;
+    line-height: 1.5;
+    font-style: italic;
+    word-wrap: break-word;
+}
+
+.citation-warning {
+    color: #888 !important;
+    font-size: 0.75em !important;
+    font-style: normal !important;
+    margin-top: 8px;
+    line-height: 1.4 !important;
+}
+
+/* AI Disclaimer */
+.ai-disclaimer {
+    margin-bottom: 15px;
+    padding: 10px;
+    background: #f5f5f5;
+    border-radius: 6px;
+    border-left: 3px solid #999;
+}
+
+.ai-disclaimer p {
+    color: #666;
+    font-size: 0.8em;
+    line-height: 1.4;
+    margin: 0;
+}
+
+/* Share Section */
+.share-section {
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.copy-feedback {
+    display: inline-block;
+    margin-left: 8px;
+    font-size: 0.8em;
+    color: #667eea;
+}
+
+/* Donate Section */
+.donate-section {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #e0e0e0;
+    text-align: center;
+}
+
+.donate-button {
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #f9d575, #e6a600);
+    color: #222;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 0.85em;
+    transition: opacity 0.2s;
+}
+
+.donate-button:hover {
+    opacity: 0.85;
+}
+
+/* Scrollbar Styling */
+body::-webkit-scrollbar {
+    width: 8px;
+}
+
+body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+body::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+body::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}

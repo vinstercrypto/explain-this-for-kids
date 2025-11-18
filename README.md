@@ -339,14 +339,180 @@ taskkill /PID <PID> /F
 - Check file permissions on summaries.db
 - SQLite doesn't handle high concurrent writes well - for production, consider PostgreSQL
 
-## Chrome Extension Integration
+## Chrome Extension
 
-The `/api/explain` endpoint is designed for browser extensions. Example use cases:
+A Chrome extension is included in the `chrome-extension/` folder that lets you summarize any webpage directly from your browser.
 
-1. Select text on any webpage
-2. Right-click → "Explain This for Kids"
-3. Extension calls your API endpoint
-4. Show popup with explanation
+### Features
+
+- **One-Click Summarization**: Click the extension icon on any webpage to extract and summarize content
+- **Grade Level Selection**: Choose from K-12 or Adult TLDR right in the popup
+- **Smart Text Extraction**: Automatically extracts main content while filtering out navigation, ads, and other noise
+- **Mode-Based Display**:
+  - K-12: Shows "Why this matters" heading + Vocabulary Builder
+  - Adult TLDR: Shows "Key takeaways" heading (no vocabulary)
+- **MLA Citation Draft**: For URL-based summaries, displays AI-generated MLA-style citation with verification warning
+- **Copy Share Link**: One-click copying of shareable summary URLs
+- **Donate Button**: Optional support link (configurable)
+
+### Installation
+
+#### 1. Configure API Endpoint
+
+Before installing, you need to configure the extension to point to your deployed API:
+
+**Edit `chrome-extension/popup.js`:**
+
+```javascript
+// Line 3-4: Replace with your deployed API URL
+const API_BASE_URL = 'https://your-app.com';  // TODO: Replace this
+const API_ENDPOINT = `${API_BASE_URL}/api/explain`;
+
+// Line 7: Optionally set your donate URL
+const DONATE_URL = 'https://your-donate-url.com';  // TODO: Replace this
+```
+
+**Edit `chrome-extension/manifest.json`:**
+
+```json
+{
+  "host_permissions": [
+    "https://your-app.com/*"  // TODO: Replace with your domain
+  ]
+}
+```
+
+#### 2. Load Extension in Chrome
+
+1. Open Chrome and go to `chrome://extensions/`
+2. Enable **Developer mode** (toggle in top right)
+3. Click **Load unpacked**
+4. Select the `chrome-extension/` folder
+5. The extension icon should appear in your toolbar
+
+#### 3. Generate Icons (Optional)
+
+The extension includes placeholder icons. For better quality:
+
+```bash
+cd chrome-extension/icons
+python3 generate-icons.py
+```
+
+Or use ImageMagick/Inkscape (see `chrome-extension/icons/GENERATE-ICONS.md`)
+
+### Usage
+
+1. **Navigate to any article or webpage** you want to summarize
+2. **Click the "Summarize It!" extension icon** in your toolbar
+3. **Select a grade level** from the dropdown (default: 5th grade)
+4. **Click "Simplify It!"**
+5. **View the summary** with:
+   - Title and explanation
+   - Why it matters / Key takeaways (depending on mode)
+   - Vocabulary Builder (K-12 only)
+   - MLA Citation Draft (if summarizing a URL)
+   - AI disclaimer (always shown)
+   - Share link copy button
+
+### Extension Structure
+
+```
+chrome-extension/
+├── manifest.json          # Chrome extension manifest (V3)
+├── popup.html            # Extension popup UI
+├── popup.css             # Popup styling
+├── popup.js              # Main logic and API integration
+├── contentScript.js      # Text extraction from webpages
+└── icons/
+    ├── icon16.png        # 16x16 icon
+    ├── icon32.png        # 32x32 icon
+    ├── icon48.png        # 48x48 icon
+    └── icon128.png       # 128x128 icon
+```
+
+### How It Works
+
+1. **Content Extraction**: When you click "Simplify It!", `contentScript.js` extracts visible text from the current page:
+   - Prioritizes main content areas (`<article>`, `<main>`, etc.)
+   - Excludes navigation, headers, footers, ads, and scripts
+   - Handles pages with minimal content gracefully
+
+2. **API Call**: The extension POSTs the extracted text to your `/api/explain` endpoint with the selected grade level
+
+3. **Smart Rendering**: Results are rendered based on the `mode` field:
+   - **Kids mode**: "Why this matters" + Vocabulary Builder
+   - **Adult TLDR mode**: "Key takeaways" + NO vocabulary
+
+4. **Share Link**: If the API returns a `share_url`, a copy button appears for easy sharing
+
+### Configuration Options
+
+**API Base URL** (`popup.js` line 3):
+```javascript
+const API_BASE_URL = 'https://your-app.com';
+```
+
+**Donate URL** (`popup.js` line 7):
+```javascript
+const DONATE_URL = 'https://ko-fi.com/yourname';
+```
+
+**Host Permissions** (`manifest.json`):
+```json
+"host_permissions": [
+  "https://your-app.com/*"
+]
+```
+
+### Troubleshooting
+
+**Extension icon doesn't appear:**
+- Check that you loaded the `chrome-extension/` folder, not a subfolder
+- Verify manifest.json has no syntax errors
+- Try reloading the extension from `chrome://extensions/`
+
+**"Not enough readable text found":**
+- The page might have very little text content
+- Try a different article or webpage
+- Some pages use heavy JavaScript rendering that makes extraction difficult
+
+**API connection fails:**
+- Verify `API_BASE_URL` in `popup.js` matches your deployed URL
+- Check that `host_permissions` in `manifest.json` includes your domain
+- Ensure your deployed app has CORS headers enabled (Flask-CORS)
+- Open browser DevTools (F12) → Console tab to see detailed errors
+
+**Vocabulary not showing for Adult TLDR:**
+- This is expected! Adult TLDR mode intentionally hides vocabulary for brevity
+- Choose a K-12 grade level if you want vocabulary terms
+
+**MLA citation not appearing:**
+- Citations only appear when summarizing URLs (not pasted text)
+- Check that the API response includes `mla_citation` field
+- The citation is marked as a draft and requires verification
+
+### Publishing to Chrome Web Store (Optional)
+
+To make the extension publicly available:
+
+1. Create a developer account at https://chrome.google.com/webstore/developer/dashboard
+2. Prepare required assets:
+   - Promotional images (440x280, 920x680, 1400x560)
+   - Detailed description
+   - Screenshots
+3. Update manifest version before each release
+4. Submit for review (usually 1-2 days)
+
+### Privacy & Permissions
+
+The extension requires:
+- **activeTab**: Access current page content (only when you click the icon)
+- **scripting**: Inject content script to extract text
+- **storage**: Cache preferences (grade level selection)
+- **Host permissions**: Connect to your API endpoint
+
+**No data is collected or sent to third parties.** All text extraction happens locally, and summaries are only sent to your configured API endpoint.
 
 ## Contributing
 
