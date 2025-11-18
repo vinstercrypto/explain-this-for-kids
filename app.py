@@ -16,8 +16,18 @@ CLAUDE_API_KEY = os.getenv('CLAUDE_API_KEY')
 if not CLAUDE_API_KEY:
     print("WARNING: CLAUDE_API_KEY not found in environment variables!")
 
-# Initialize Anthropic client
-client = anthropic.Anthropic(api_key=CLAUDE_API_KEY)
+# Client will be initialized when needed
+_client = None
+
+
+def get_claude_client():
+    """Get or create the Anthropic client."""
+    global _client
+    if _client is None:
+        if not CLAUDE_API_KEY:
+            raise ValueError("CLAUDE_API_KEY not set in environment variables")
+        _client = anthropic.Anthropic(api_key=CLAUDE_API_KEY)
+    return _client
 
 
 def is_url(text):
@@ -91,6 +101,7 @@ CONTENT:
 {content}"""
 
     try:
+        client = get_claude_client()
         message = client.messages.create(
             model="claude-sonnet-4-20250514",
             max_tokens=1024,
