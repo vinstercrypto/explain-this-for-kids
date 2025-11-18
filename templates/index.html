@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explain This for Kids</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Explain This for Kids</h1>
+            <p class="subtitle">Paste text or a URL to get a simple explanation</p>
+        </header>
+
+        <div class="input-section">
+            <form id="explainForm">
+                <div class="form-group">
+                    <label for="input_text">Enter text or paste a URL:</label>
+                    <textarea
+                        id="input_text"
+                        name="input_text"
+                        rows="8"
+                        placeholder="Paste an article URL or the text you want explained..."
+                        required
+                    ></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="grade_level">Select grade level:</label>
+                    <select id="grade_level" name="grade_level" required>
+                        <option value="Kindergarten">Kindergarten</option>
+                        <option value="1st grade">1st grade</option>
+                        <option value="2nd grade">2nd grade</option>
+                        <option value="3rd grade">3rd grade</option>
+                        <option value="4th grade">4th grade</option>
+                        <option value="5th grade" selected>5th grade</option>
+                        <option value="6th grade">6th grade</option>
+                        <option value="7th grade">7th grade</option>
+                        <option value="8th grade">8th grade</option>
+                        <option value="9th grade">9th grade</option>
+                        <option value="10th grade">10th grade</option>
+                        <option value="11th grade">11th grade</option>
+                        <option value="12th grade">12th grade</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-primary">Explain it!</button>
+            </form>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Working on your explanation...</p>
+        </div>
+
+        <div id="error" class="error-message" style="display: none;"></div>
+
+        <div id="result" class="result" style="display: none;">
+            <h2 id="result-title"></h2>
+            <div class="explanation">
+                <p id="result-explanation"></p>
+            </div>
+            <div class="why-matters">
+                <h3>Why this matters:</h3>
+                <ul id="result-why-matters"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>
