@@ -19,6 +19,7 @@ A powerful web app that takes complex text or article URLs and explains them at 
   - Adult TLDR: 1-2 sentence TLDR + 5 short bullets (NO vocabulary)
 - **Safe Summary Mode**: For K-5, content is filtered to avoid graphic violence, explicit content, and inappropriate topics
 - **Vocabulary Builder**: 3-6 key terms with grade-appropriate definitions (K-12 only, not for Adult TLDR)
+- **Citation Draft**: AI-generated MLA-style citations for URL sources as a starting point. Always verify against official MLA guidelines or teacher requirements.
 - **Shareable Links**: Each explanation gets a unique shareable URL
 - **PDF Download**: Download explanations as printable PDFs
 - **Email Summary**: Send explanations to any email address

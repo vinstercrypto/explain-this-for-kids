@@ -273,6 +273,14 @@ select:focus {
     word-wrap: break-word;
 }
 
+.citation-warning {
+    color: #888 !important;
+    font-size: 0.8em !important;
+    font-style: normal !important;
+    margin-top: 10px;
+    line-height: 1.5 !important;
+}
+
 /* AI Disclaimer */
 .ai-disclaimer {
     margin-bottom: 25px;
@@ -485,6 +493,10 @@ select:focus {
 
     .mla-citation-section p {
         font-size: 0.85em;
+    }
+
+    .citation-warning {
+        font-size: 0.75em !important;
     }
 
     .ai-disclaimer p {

@@ -697,9 +697,11 @@ def download_pdf():
         # MLA Citation (only if source was a URL)
         if result.get('mla_citation'):
             pdf.set_font('Helvetica', 'B', 10)
-            pdf.cell(0, 10, txt='MLA-style citation:', new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            pdf.cell(0, 10, txt='Citation draft (MLA-style):', new_x=XPos.LMARGIN, new_y=YPos.NEXT)
             pdf.set_font('Helvetica', 'I', 9)
             pdf.multi_cell(0, 5, txt=result['mla_citation'])
+            pdf.set_font('Helvetica', '', 8)
+            pdf.multi_cell(0, 4, txt='Check this citation against official MLA guidelines before use.')
             pdf.ln(3)
 
         # AI Disclaimer
