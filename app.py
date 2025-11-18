@@ -35,7 +35,7 @@ SMTP_PASSWORD = os.getenv('SMTP_PASSWORD', '')
 SMTP_FROM_EMAIL = os.getenv('SMTP_FROM_EMAIL', '')
 
 # Optional donate URL
-DONATE_URL = os.getenv('DONATE_URL', '')
+DONATE_URL = os.getenv('DONATE_URL', '').strip()
 
 # Database file
 DB_FILE = 'summaries.db'
