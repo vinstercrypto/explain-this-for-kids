@@ -48,6 +48,17 @@
             </div>
             {% endif %}
 
+            {% if summary.mla_citation %}
+            <div class="mla-citation-section">
+                <h4>MLA-style citation (beta):</h4>
+                <p>{{ summary.mla_citation }}</p>
+            </div>
+            {% endif %}
+
+            <div class="ai-disclaimer">
+                <p>This summary is AI-generated and may contain errors. Check the original source for full accuracy and context.</p>
+            </div>
+
             <div class="share-footer">
                 <p>Created on {{ summary.created_at[:10] }}</p>
                 <a href="/" class="btn-secondary">Create Your Own Summary</a>

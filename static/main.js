@@ -70,6 +70,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     vocabSection.style.display = 'none';
                 }
 
+                // Update MLA citation (only show if source was a URL)
+                const mlaCitationSection = document.getElementById('mla-citation-section');
+                const mlaCitationText = document.getElementById('result-mla-citation');
+
+                if (data.mla_citation) {
+                    mlaCitationText.textContent = data.mla_citation;
+                    mlaCitationSection.style.display = 'block';
+                } else {
+                    mlaCitationSection.style.display = 'none';
+                }
+
                 // Store share URL
                 currentShareUrl = window.location.origin + data.share_url;
 

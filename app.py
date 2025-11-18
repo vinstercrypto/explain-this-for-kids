@@ -7,6 +7,7 @@ import smtplib
 from datetime import datetime, timezone
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from urllib.parse import urlparse
 import requests
 from flask import Flask, render_template, request, jsonify, session, send_file, url_for
 from bs4 import BeautifulSoup
@@ -63,9 +64,23 @@ def init_db():
             title TEXT,
             explanation TEXT,
             bullets TEXT,
-            vocabulary TEXT
+            vocabulary TEXT,
+            source_url TEXT,
+            mla_citation TEXT
         )
     ''')
+
+    # Add new columns to existing tables (migration for older databases)
+    try:
+        cursor.execute('ALTER TABLE summaries ADD COLUMN source_url TEXT')
+    except sqlite3.OperationalError:
+        pass  # Column already exists
+
+    try:
+        cursor.execute('ALTER TABLE summaries ADD COLUMN mla_citation TEXT')
+    except sqlite3.OperationalError:
+        pass  # Column already exists
+
     conn.commit()
     conn.close()
 
@@ -280,7 +295,7 @@ def is_url(text):
 
 
 def extract_article_text(url):
-    """Fetch URL and extract readable article text."""
+    """Fetch URL and extract readable article text plus metadata for MLA citation."""
     try:
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
@@ -290,6 +305,25 @@ def extract_article_text(url):
 
         soup = BeautifulSoup(response.content, 'html.parser')
 
+        # Extract page title for MLA citation
+        page_title = None
+
+        # Try og:title first (often cleaner)
+        og_title = soup.find('meta', property='og:title')
+        if og_title and og_title.get('content'):
+            page_title = og_title.get('content').strip()
+
+        # Fallback to <title> tag
+        if not page_title:
+            title_tag = soup.find('title')
+            if title_tag:
+                page_title = title_tag.get_text().strip()
+
+        # Extract domain for MLA citation
+        parsed_url = urlparse(url)
+        domain = parsed_url.netloc.replace('www.', '')
+
+        # Extract article text
         for script in soup(['script', 'style', 'nav', 'header', 'footer', 'aside']):
             script.decompose()
 
@@ -310,11 +344,45 @@ def extract_article_text(url):
         if len(text) < 100:
             return None
 
-        return text
+        return {
+            'text': text,
+            'page_title': page_title,
+            'domain': domain
+        }
 
     except Exception as e:
         print(f"Error fetching URL: {e}")
         return None
+
+
+def generate_mla_citation(url, page_title=None, domain=None):
+    """Generate a basic MLA 9 style web citation."""
+    # Get current date for access date
+    now = datetime.now(timezone.utc)
+    access_date = now.strftime("%d %b. %Y")  # e.g., "15 Jan. 2025"
+
+    # Parse URL if domain not provided
+    if not domain:
+        parsed_url = urlparse(url)
+        domain = parsed_url.netloc.replace('www.', '')
+
+    # Use fallback title if not provided
+    if not page_title or page_title.strip() == '':
+        page_title = f"Web page at {domain}"
+
+    # Clean up page title (remove site name if it appears at end after pipe or dash)
+    if ' | ' in page_title:
+        page_title = page_title.split(' | ')[0].strip()
+    elif ' - ' in page_title:
+        page_title = page_title.split(' - ')[0].strip()
+
+    # MLA 9 format: Title. Website/Domain, URL. Accessed Date.
+    # Capitalize first letter of domain for site name
+    site_name = domain.split('.')[0].capitalize() if domain else "Website"
+
+    citation = f'"{page_title}." {site_name}, {url}. Accessed {access_date}.'
+
+    return citation
 
 
 def call_claude_api(content, grade_level):
@@ -350,7 +418,7 @@ def call_claude_api(content, grade_level):
         raise
 
 
-def save_summary_to_db(grade_level, category, title, explanation, bullets, vocabulary):
+def save_summary_to_db(grade_level, category, title, explanation, bullets, vocabulary, source_url=None, mla_citation=None):
     """Save summary to database and return short ID."""
     summary_id = secrets.token_urlsafe(8)
     created_at = datetime.now(timezone.utc).isoformat()
@@ -358,8 +426,8 @@ def save_summary_to_db(grade_level, category, title, explanation, bullets, vocab
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     cursor.execute('''
-        INSERT INTO summaries (id, created_at, grade_level, category, title, explanation, bullets, vocabulary)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO summaries (id, created_at, grade_level, category, title, explanation, bullets, vocabulary, source_url, mla_citation)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         summary_id,
         created_at,
@@ -368,7 +436,9 @@ def save_summary_to_db(grade_level, category, title, explanation, bullets, vocab
         title,
         explanation,
         json.dumps(bullets),
-        json.dumps(vocabulary)
+        json.dumps(vocabulary),
+        source_url,
+        mla_citation
     ))
     conn.commit()
     conn.close()
@@ -395,7 +465,9 @@ def get_summary_by_id(summary_id):
         'title': row[4],
         'explanation': row[5],
         'bullets': json.loads(row[6]),
-        'vocabulary': json.loads(row[7])
+        'vocabulary': json.loads(row[7]),
+        'source_url': row[8] if len(row) > 8 else None,
+        'mla_citation': row[9] if len(row) > 9 else None
     }
 
 
@@ -404,15 +476,27 @@ def process_explanation(input_text, grade_level):
     if not input_text:
         raise ValueError('Please enter some text or a URL to explain.')
 
+    # Initialize MLA-related fields
+    source_url = None
+    mla_citation = None
+
     # Check if input is a URL
     if is_url(input_text):
         print(f"Detected URL: {input_text}")
-        extracted_text = extract_article_text(input_text)
+        extracted_data = extract_article_text(input_text)
 
-        if not extracted_text:
+        if not extracted_data:
             raise ValueError('Could not read that link. Please copy and paste the text manually.')
 
-        content = extracted_text
+        content = extracted_data['text']
+        source_url = input_text
+
+        # Generate MLA citation
+        mla_citation = generate_mla_citation(
+            url=input_text,
+            page_title=extracted_data.get('page_title'),
+            domain=extracted_data.get('domain')
+        )
     else:
         content = input_text
 
@@ -431,12 +515,16 @@ def process_explanation(input_text, grade_level):
         result['title'],
         result['explanation'],
         result['why_it_matters'],
-        result['vocabulary']
+        result['vocabulary'],
+        source_url,
+        mla_citation
     )
 
-    # Add share URL
+    # Add share URL and MLA fields to result
     result['share_url'] = f"/s/{summary_id}"
     result['summary_id'] = summary_id
+    result['source_url'] = source_url
+    result['mla_citation'] = mla_citation
 
     return result
 
@@ -466,7 +554,9 @@ def explain():
             'vocabulary': result['vocabulary'],
             'mode': result['mode'],
             'timestamp': datetime.now(timezone.utc).isoformat(),
-            'summary_id': result['summary_id']
+            'summary_id': result['summary_id'],
+            'source_url': result.get('source_url'),
+            'mla_citation': result.get('mla_citation')
         }
 
         return jsonify({
@@ -476,7 +566,8 @@ def explain():
             'why_it_matters': result['why_it_matters'],
             'vocabulary': result['vocabulary'],
             'mode': result['mode'],
-            'share_url': result['share_url']
+            'share_url': result['share_url'],
+            'mla_citation': result.get('mla_citation')
         })
 
     except ValueError as e:
@@ -516,7 +607,8 @@ def api_explain():
             'why_it_matters': result['why_it_matters'],
             'vocabulary': result['vocabulary'],
             'mode': result['mode'],
-            'share_url': result['share_url']
+            'share_url': result['share_url'],
+            'mla_citation': result.get('mla_citation')
         })
 
     except ValueError as e:
@@ -598,6 +690,19 @@ def download_pdf():
                 pdf.set_x(15)  # Indent
                 pdf.multi_cell(0, 6, txt=f"- {vocab_text}")
             pdf.ln(5)
+
+        # MLA Citation (only if source was a URL)
+        if result.get('mla_citation'):
+            pdf.set_font('Helvetica', 'B', 10)
+            pdf.cell(0, 10, txt='MLA-style citation:', new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            pdf.set_font('Helvetica', 'I', 9)
+            pdf.multi_cell(0, 5, txt=result['mla_citation'])
+            pdf.ln(3)
+
+        # AI Disclaimer
+        pdf.set_font('Helvetica', 'I', 8)
+        pdf.multi_cell(0, 5, txt='This summary is AI-generated and may contain errors. Check the original source for full accuracy and context.')
+        pdf.ln(5)
 
         # Timestamp
         pdf.set_font('Helvetica', 'I', 8)
