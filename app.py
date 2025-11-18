@@ -106,46 +106,70 @@ IMPORTANT - SAFE SUMMARY MODE FOR YOUNG LEARNERS:
 - If the content contains sensitive topics, acknowledge them gently (e.g., "something serious happened") without graphic details
 - Use age-appropriate language and avoid partisan political framing or inflammatory language
 - Focus on educational value and positive learning outcomes
+
 """
     else:
         safe_instructions = ""
 
-    # Adult TLDR format - TRULY CONCISE, NO VOCABULARY
+    # Adult TLDR format - EXTREMELY CONCISE, NO VOCABULARY
     if category == 'D':
-        format_instructions = f"""
-Please format your response EXACTLY as follows - KEEP IT VERY BRIEF (this is "Too Long Didn't Read"):
+        prompt = f"""{safe_instructions}You are producing an Adult TLDR summary. Follow these rules strictly:
 
-1) First line: A concise, clear title (no label, just the title)
-2) Blank line
-3) TLDR: Write "TLDR:" followed by 1-2 sentences max summarizing the key point
-4) Blank line
-5) "Why this matters:" on its own line
-6) Exactly {bullet_count} SHORT bullet points (use •) - each bullet should be ONE LINE MAX, focusing on key takeaways
+GOAL:
+Provide a fast, high-signal summary an adult can read in under 10 seconds.
 
-DO NOT include vocabulary words or definitions.
-DO NOT write long explanatory paragraphs beyond the TLDR.
-Keep the entire response concise and scannable for busy adults.
-"""
+STRUCTURE (mandatory - use these exact labels):
+
+TITLE:
+[Write a clear, factual, concise title in 1 line max. No drama. No phrases like "Why this matters" or "Summary of..."]
+
+TLDR:
+[Write 1-2 sentences capturing the essential fact or change. Stay extremely compact.]
+
+KEY TAKEAWAYS:
+[Write 3-5 bullet points using this format: "• [point]"]
+[Each bullet must be SHORT and DIRECT - one line each]
+[No storytelling. No restating the TLDR.]
+[Focus on impact, implications, or what changed]
+
+ADDITIONAL RULES:
+- Do NOT include vocabulary definitions or extra sections
+- Do NOT mimic a school assignment
+- Remove redundancy between TLDR and bullets
+- Total output should be very brief (aim for roughly 60-70 words total)
+- This is for busy adults who need information fast
+
+CONTENT:
+{content}"""
+
     else:
         # K-12 format with vocabulary
-        format_instructions = f"""
-Please format your response EXACTLY as follows:
+        if category == 'A':
+            age_guidance = "Use simple, age-appropriate language suitable for young children (K-5)."
+        elif category == 'B':
+            age_guidance = "Use language appropriate for middle school students (6-8 grade)."
+        else:  # category == 'C'
+            age_guidance = "Use language appropriate for high school students (9-12 grade)."
 
-1) First line: A short, clear title (no label, just the title)
-2) Blank line
-3) Write a {grade_level}-appropriate explanation (3-5 sentences)
-4) Blank line
-5) "Why this matters:" on its own line
-6) Exactly {bullet_count} bullet points (use •) explaining real-world relevance for {grade_level} students
-7) Blank line
-8) "Vocabulary:" on its own line
-9) 3-6 key words with simple definitions appropriate for {grade_level}, formatted as "• WORD: definition"
-"""
+        prompt = f"""{safe_instructions}Rewrite or summarize the following content so that a {grade_level} student can understand it.
 
-    prompt = f"""{safe_instructions}
-Rewrite or summarize the following content so that a {grade_level} {"reader" if category == "D" else "student"} can understand it.
+{age_guidance}
 
-{format_instructions}
+STRUCTURE (mandatory - use these exact labels):
+
+TITLE:
+[Write a short, clear title]
+
+EXPLANATION:
+[Write a {grade_level}-appropriate explanation in 3-5 sentences]
+
+WHY THIS MATTERS:
+[Write exactly {bullet_count} bullet points using this format: "• [point]"]
+[Each bullet should explain real-world relevance for {grade_level} students]
+
+VOCABULARY:
+[List 3-6 key words with simple definitions appropriate for {grade_level}]
+[Format each as: "• WORD: definition"]
 
 CONTENT:
 {content}"""
@@ -154,49 +178,56 @@ CONTENT:
 
 
 def parse_claude_response(response_text, category):
-    """Parse Claude's response into structured data."""
+    """Parse Claude's response into structured data with clear markers."""
     lines = response_text.strip().split('\n')
 
     title = ""
-    tldr = ""
     explanation_lines = []
     why_matters_bullets = []
     vocabulary_items = []
 
-    section = "title"
+    section = None
 
     for line in lines:
-        line = line.strip()
-        if not line:
+        line_stripped = line.strip()
+
+        # Skip empty lines and bracket instructions
+        if not line_stripped or line_stripped.startswith('['):
             continue
 
-        # Detect sections
-        if section == "title":
-            title = line
-            section = "content"
-        elif line.lower().startswith("tldr:"):
-            tldr = line[5:].strip()
-            section = "content"
-        elif "why this matters" in line.lower():
-            section = "why_matters"
-        elif "vocabulary" in line.lower() and ":" in line:
+        # Detect section headers
+        line_upper = line_stripped.upper()
+
+        if line_upper == "TITLE:":
+            section = "title"
+            continue
+        elif line_upper == "EXPLANATION:":
+            section = "explanation"
+            continue
+        elif line_upper == "TLDR:":
+            section = "tldr"
+            continue
+        elif line_upper in ["WHY THIS MATTERS:", "KEY TAKEAWAYS:"]:
+            section = "bullets"
+            continue
+        elif line_upper == "VOCABULARY:":
             section = "vocabulary"
-        elif section == "content":
-            if "why this matters" in line.lower():
-                section = "why_matters"
-            elif "vocabulary" in line.lower() and ":" in line:
-                section = "vocabulary"
-            else:
-                explanation_lines.append(line)
-        elif section == "why_matters":
-            if "vocabulary" in line.lower() and ":" in line:
-                section = "vocabulary"
-            else:
-                clean_line = line.lstrip('•-*').strip()
-                if clean_line:
-                    why_matters_bullets.append(clean_line)
+            continue
+
+        # Process content based on current section
+        if section == "title":
+            if not title:  # Take only the first line after TITLE:
+                title = line_stripped
+        elif section == "explanation":
+            explanation_lines.append(line_stripped)
+        elif section == "tldr":
+            explanation_lines.append(line_stripped)
+        elif section == "bullets":
+            clean_line = line_stripped.lstrip('•-*').strip()
+            if clean_line:
+                why_matters_bullets.append(clean_line)
         elif section == "vocabulary":
-            clean_line = line.lstrip('•-*').strip()
+            clean_line = line_stripped.lstrip('•-*').strip()
             if ':' in clean_line:
                 parts = clean_line.split(':', 1)
                 word = parts[0].strip()
@@ -204,32 +235,39 @@ def parse_claude_response(response_text, category):
                 vocabulary_items.append({"word": word, "definition": definition})
 
     # Build explanation
-    if category == 'D':
-        # Adult TLDR - keep it truly concise, just the TLDR
-        if tldr:
-            explanation = f"TLDR: {tldr}"
-        else:
-            explanation = ' '.join(explanation_lines) if explanation_lines else response_text
-    else:
-        explanation = ' '.join(explanation_lines)
+    explanation = ' '.join(explanation_lines) if explanation_lines else response_text
 
-    # Vocabulary - Adult TLDR gets NO vocabulary
+    # Determine mode and finalize vocabulary
+    mode = "adult_tldr" if category == 'D' else "kids"
+
     if category == 'D':
+        # Adult TLDR: No vocabulary
         vocabulary_items = []
     else:
-        # Ensure minimum vocabulary items for K-12
+        # K-12: Ensure minimum vocabulary items
         if len(vocabulary_items) < 3:
             vocabulary_items = [
                 {"word": "Context", "definition": "The circumstances or setting surrounding something"},
                 {"word": "Summary", "definition": "A brief statement of the main points"},
                 {"word": "Explanation", "definition": "A description that makes something clear"}
             ]
+        vocabulary_items = vocabulary_items[:6]  # Limit to 6
+
+    # Enforce bullet count
+    expected_count = get_bullet_count(category)
+    if len(why_matters_bullets) > expected_count:
+        why_matters_bullets = why_matters_bullets[:expected_count]
+    elif len(why_matters_bullets) < expected_count and category != 'D':
+        # Pad K-12 if needed (Adult TLDR can have 3-5)
+        while len(why_matters_bullets) < expected_count:
+            why_matters_bullets.append("This helps you understand important ideas in the world.")
 
     return {
-        "title": title or "Explanation",
-        "explanation": explanation or response_text,
+        "title": title or "Summary",
+        "explanation": explanation,
         "why_it_matters": why_matters_bullets,
-        "vocabulary": vocabulary_items[:6] if category != 'D' else []
+        "vocabulary": vocabulary_items,
+        "mode": mode
     }
 
 
@@ -426,6 +464,7 @@ def explain():
             'explanation': result['explanation'],
             'why_it_matters': result['why_it_matters'],
             'vocabulary': result['vocabulary'],
+            'mode': result['mode'],
             'timestamp': datetime.now(timezone.utc).isoformat(),
             'summary_id': result['summary_id']
         }
@@ -436,6 +475,7 @@ def explain():
             'explanation': result['explanation'],
             'why_it_matters': result['why_it_matters'],
             'vocabulary': result['vocabulary'],
+            'mode': result['mode'],
             'share_url': result['share_url']
         })
 
@@ -475,6 +515,7 @@ def api_explain():
             'explanation': result['explanation'],
             'why_it_matters': result['why_it_matters'],
             'vocabulary': result['vocabulary'],
+            'mode': result['mode'],
             'share_url': result['share_url']
         })
 

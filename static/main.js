@@ -34,6 +34,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Update explanation
                 document.getElementById('result-explanation').textContent = data.explanation;
 
+                // Update bullets heading based on mode
+                const bulletsHeading = document.getElementById('result-bullets-heading');
+                if (data.mode === 'adult_tldr') {
+                    bulletsHeading.textContent = 'Key takeaways:';
+                } else {
+                    bulletsHeading.textContent = 'Why this matters:';
+                }
+
                 // Update bullets
                 const bulletList = document.getElementById('result-why-matters');
                 bulletList.innerHTML = '';
