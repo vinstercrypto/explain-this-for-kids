@@ -63,6 +63,15 @@
                 <p>Created on {{ summary.created_at[:10] }}</p>
                 <a href="/" class="btn-secondary">Create Your Own Summary</a>
             </div>
+
+            {% if donate_url %}
+            <div class="donate-section">
+                <a href="{{ donate_url }}" target="_blank" rel="noopener noreferrer" class="donate-link">
+                    ❤️ Donate
+                </a>
+                <p class="donate-text">Support this free tool</p>
+            </div>
+            {% endif %}
         </div>
     </div>
 </body>

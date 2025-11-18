@@ -358,6 +358,43 @@ select:focus {
     border: 1px solid #f5c6cb;
 }
 
+/* Donate Section */
+.donate-section {
+    margin-top: 25px;
+    padding: 20px;
+    text-align: center;
+    background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+    border-radius: 8px;
+    border: 2px solid #f39c12;
+}
+
+.donate-link {
+    display: inline-block;
+    padding: 12px 24px;
+    background: white;
+    color: #e67e22;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.1em;
+    border-radius: 6px;
+    transition: all 0.3s;
+    box-shadow: 0 2px 8px rgba(230, 126, 34, 0.2);
+}
+
+.donate-link:hover {
+    background: #e67e22;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(230, 126, 34, 0.3);
+}
+
+.donate-text {
+    margin-top: 10px;
+    color: #d35400;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
 /* Shared Summary Page */
 .grade-badge {
     display: inline-block;
@@ -452,6 +489,15 @@ select:focus {
 
     .ai-disclaimer p {
         font-size: 0.8em;
+    }
+
+    .donate-link {
+        font-size: 1em;
+        padding: 10px 20px;
+    }
+
+    .donate-text {
+        font-size: 0.85em;
     }
 
     .action-buttons {

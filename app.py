@@ -34,6 +34,9 @@ SMTP_USERNAME = os.getenv('SMTP_USERNAME', '')
 SMTP_PASSWORD = os.getenv('SMTP_PASSWORD', '')
 SMTP_FROM_EMAIL = os.getenv('SMTP_FROM_EMAIL', '')
 
+# Optional donate URL
+DONATE_URL = os.getenv('DONATE_URL', '')
+
 # Database file
 DB_FILE = 'summaries.db'
 
@@ -532,7 +535,7 @@ def process_explanation(input_text, grade_level):
 @app.route('/')
 def index():
     """Render the main page."""
-    return render_template('index.html')
+    return render_template('index.html', donate_url=DONATE_URL)
 
 
 @app.route('/explain', methods=['POST'])
@@ -632,7 +635,7 @@ def view_summary(summary_id):
     if not summary:
         return render_template('404.html'), 404
 
-    return render_template('summary.html', summary=summary)
+    return render_template('summary.html', summary=summary, donate_url=DONATE_URL)
 
 
 @app.route('/download-pdf')

@@ -109,6 +109,14 @@ SMTP_PASSWORD=your_app_password
 SMTP_FROM_EMAIL=your.email@gmail.com
 ```
 
+**Optional (for donation button):**
+
+```env
+DONATE_URL=https://www.example.com/donate
+```
+
+Set `DONATE_URL` to your PayPal, Ko-fi, Buy Me a Coffee, or any other donation page URL. When set, a "Donate" button will appear on the main page and share pages. If not set or left empty, the donate button will be hidden.
+
 **Getting a Claude API Key:**
 - Go to https://console.anthropic.com/
 - Sign up or log in
