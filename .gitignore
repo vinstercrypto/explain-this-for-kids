@@ -1,6 +1,9 @@
 # Environment variables
 .env
 
+# Database
+summaries.db
+
 # Virtual environment
 venv/
 env/

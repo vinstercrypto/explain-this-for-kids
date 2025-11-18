@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ summary.title }} - Explain This for Kids</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta property="og:title" content="{{ summary.title }}">
+    <meta property="og:description" content="{{ summary.explanation[:200] }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Explain This for Kids</h1>
+            <p class="subtitle">Shared Explanation</p>
+        </header>
+
+        <div class="result">
+            <div class="grade-badge">
+                Grade Level: {{ summary.grade_level }}
+            </div>
+
+            <h2>{{ summary.title }}</h2>
+
+            <div class="explanation">
+                <p>{{ summary.explanation }}</p>
+            </div>
+
+            <div class="why-matters">
+                <h3>Why this matters:</h3>
+                <ul>
+                    {% for bullet in summary.bullets %}
+                    <li>{{ bullet }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="vocabulary-section">
+                <h3>Vocabulary Builder:</h3>
+                <div class="vocabulary-list">
+                    {% for item in summary.vocabulary %}
+                    <div class="vocab-item">
+                        <strong>{{ item.word }}:</strong> {{ item.definition }}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="share-footer">
+                <p>Created on {{ summary.created_at[:10] }}</p>
+                <a href="/" class="btn-secondary">Create Your Own Explanation</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
