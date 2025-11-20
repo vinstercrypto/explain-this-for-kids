@@ -1,6 +1,20 @@
-# Explain This for Kids 📚
+# Summarize It! 📚
 
 A powerful web app that takes complex text or article URLs and explains them at any grade level (K-12 or Adult TLDR). Perfect for parents, teachers, and anyone who needs to make content accessible to young learners.
+
+## ⚠️ Important: Before You Start
+
+**This app requires a paid Claude API key to function.**
+
+- **Cost:** ~$0.01-0.05 per summary (pay-as-you-go)
+- **Minimum:** $10 prepaid credits to get started
+- **Sign up:** https://console.anthropic.com/
+
+**Quick Start:** See `QUICK-START.md` for 5-minute setup guide.
+
+**Full Audit:** See `AUDIT-REPORT.md` for complete technical review and monetization analysis.
+
+---
 
 ## Features
 
